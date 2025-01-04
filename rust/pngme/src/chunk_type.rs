@@ -4,6 +4,12 @@ use std::{
     str::{from_utf8, FromStr},
 };
 
+fn are_bytes_lowercase_chars(bytes: [u8; 4]) -> bool {
+    bytes
+        .iter()
+        .all(|&b| (b >= 65 && b <= 90) || (b >= 97 && b <= 122))
+}
+
 #[derive(PartialEq, Debug)]
 struct ChunkType {
     bytes: [u8; 4],
@@ -28,10 +34,7 @@ impl FromStr for ChunkType {
 
         let chunk_type = ChunkType { bytes: chunk_bytes };
 
-        if !chunk_bytes
-            .iter()
-            .all(|&b| (b >= 65 && b <= 90) || (b >= 97 && b <= 122))
-        {
+        if !are_bytes_lowercase_char(chunk_bytes) {
             return Err("Bytes must be uppercase or lowercase letters".into());
         }
 
@@ -93,9 +96,7 @@ impl ChunkType {
             return false;
         }
 
-        self.bytes
-            .iter()
-            .all(|&b| (b >= 65 && b <= 90) || (b >= 97 && b <= 122))
+        are_bytes_lowercase_char(self.bytes)
     }
 }
 
@@ -103,7 +104,7 @@ impl ChunkType {
 mod tests {
     use super::*;
     use std::convert::TryFrom;
-    // use std::str::FromStr;
+    use std::str::FromStr;
 
     #[test]
     pub fn test_chunk_type_from_bytes() {
