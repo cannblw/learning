@@ -1,4 +1,4 @@
-use std::error::Error;
+use std::{error::Error, str::FromStr};
 
 #[derive(PartialEq, Debug)]
 struct ChunkType {
@@ -13,17 +13,30 @@ impl TryFrom<[u8; 4]> for ChunkType {
     }
 }
 
-/// Defined in http://www.libpng.org/pub/png/spec/1.2/PNG-Structure.html
-impl ChunkType {
-    fn from_str(str: &str) -> Option<ChunkType> {
+impl FromStr for ChunkType {
+    type Err = Box<dyn Error>;
+
+    fn from_str(str: &str) -> Result<ChunkType, Box<dyn Error>> {
         let chunk_bytes: [u8; 4] = str
             .as_bytes()
             .try_into()
-            .expect("String must have a 4-byte length");
+            .map_err(|_| "String must have a 4-byte length")?;
 
-        Some(ChunkType { bytes: chunk_bytes })
+        let chunk_type = ChunkType { bytes: chunk_bytes };
+
+        if !chunk_bytes
+            .iter()
+            .all(|&b| (b >= 65 && b <= 90) || (b >= 97 && b <= 122))
+        {
+            return Err("Bytes must be uppercase or lowercase letters".into());
+        }
+
+        Ok(chunk_type)
     }
+}
 
+/// Defined in http://www.libpng.org/pub/png/spec/1.2/PNG-Structure.html
+impl ChunkType {
     fn bytes(&self) -> [u8; 4] {
         self.bytes
     }
@@ -62,6 +75,16 @@ impl ChunkType {
 
     fn is_safe_to_copy(&self) -> bool {
         self.get_safe_to_copy_bit() == 1
+    }
+
+    fn is_valid(&self) -> bool {
+        if self.get_reserved_bit() != 0 {
+            return false;
+        }
+
+        self.bytes
+            .iter()
+            .all(|&b| (b >= 65 && b <= 90) || (b >= 97 && b <= 122))
     }
 }
 
@@ -134,20 +157,20 @@ mod tests {
         assert!(!chunk.is_safe_to_copy());
     }
 
-    // #[test]
-    // pub fn test_valid_chunk_is_valid() {
-    //     let chunk = ChunkType::from_str("RuSt").unwrap();
-    //     assert!(chunk.is_valid());
-    // }
+    #[test]
+    pub fn test_valid_chunk_is_valid() {
+        let chunk = ChunkType::from_str("RuSt").unwrap();
+        assert!(chunk.is_valid());
+    }
 
-    // #[test]
-    // pub fn test_invalid_chunk_is_valid() {
-    //     let chunk = ChunkType::from_str("Rust").unwrap();
-    //     assert!(!chunk.is_valid());
+    #[test]
+    pub fn test_invalid_chunk_is_valid() {
+        let chunk = ChunkType::from_str("Rust").unwrap();
+        assert!(!chunk.is_valid());
 
-    //     let chunk = ChunkType::from_str("Ru1t");
-    //     assert!(chunk.is_err());
-    // }
+        let chunk = ChunkType::from_str("Ru1t");
+        assert!(chunk.is_err());
+    }
 
     // #[test]
     // pub fn test_chunk_type_string() {
