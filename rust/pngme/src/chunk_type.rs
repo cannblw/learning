@@ -11,7 +11,7 @@ fn are_bytes_lowercase_chars(bytes: [u8; 4]) -> bool {
 }
 
 #[derive(PartialEq, Debug)]
-struct ChunkType {
+pub struct ChunkType {
     bytes: [u8; 4],
 }
 
@@ -19,6 +19,10 @@ impl TryFrom<[u8; 4]> for ChunkType {
     type Error = Box<dyn Error>;
 
     fn try_from(bytes: [u8; 4]) -> Result<Self, Box<dyn Error>> {
+        if !are_bytes_lowercase_chars(bytes) {
+            return Err("Bytes must be uppercase or lowercase letters".into());
+        }
+
         Ok(ChunkType { bytes })
     }
 }
@@ -34,7 +38,7 @@ impl FromStr for ChunkType {
 
         let chunk_type = ChunkType { bytes: chunk_bytes };
 
-        if !are_bytes_lowercase_char(chunk_bytes) {
+        if !are_bytes_lowercase_chars(chunk_bytes) {
             return Err("Bytes must be uppercase or lowercase letters".into());
         }
 
@@ -51,7 +55,7 @@ impl Display for ChunkType {
 
 /// Defined in http://www.libpng.org/pub/png/spec/1.2/PNG-Structure.html
 impl ChunkType {
-    fn bytes(&self) -> [u8; 4] {
+    pub fn bytes(&self) -> [u8; 4] {
         self.bytes
     }
 
@@ -96,7 +100,7 @@ impl ChunkType {
             return false;
         }
 
-        are_bytes_lowercase_char(self.bytes)
+        are_bytes_lowercase_chars(self.bytes)
     }
 }
 

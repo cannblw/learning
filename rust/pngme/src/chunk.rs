@@ -1,3 +1,110 @@
+use crate::chunk_type::ChunkType;
+use crc::Crc;
+use std::{error::Error, fmt::Display, str};
+
+const CRC_INSTANCE: crc::Crc<u32> = Crc::<u32>::new(&crc::CRC_32_ISO_HDLC);
+
+struct Chunk {
+    chunk_type: ChunkType,
+    data: Vec<u8>,
+    length: usize,
+    crc: u32,
+}
+
+impl TryFrom<&Vec<u8>> for Chunk {
+    type Error = Box<dyn Error>;
+
+    fn try_from(input: &Vec<u8>) -> Result<Self, Self::Error> {
+        // First 4 bytes
+        let length_bytes: &[u8; 4] = &input[0..4]
+            .try_into()
+            .expect("Length can't be converted to number from bytes");
+
+        let length = u32::from_be_bytes(*length_bytes) as usize;
+
+        // Next 4 bytes
+        let chunk_type_bytes: &[u8; 4] = &input[4..8]
+            .try_into()
+            .expect("Could not convert chunk_type to 4-byte array");
+
+        let chunk_type: ChunkType = ChunkType::try_from(*chunk_type_bytes)?;
+
+        // 4 because that's the size of the CRC in bytes
+        let crc_index = input.len() - 4;
+
+        let crc_bytes = &input[crc_index..];
+        let crc = u32::from_be_bytes(
+            crc_bytes
+                .try_into()
+                .expect("CRC can't be converted to number from bytes"),
+        );
+
+        let data: Vec<u8> = input[8..crc_index].to_vec();
+
+        let mut crc_target = chunk_type.bytes().to_vec();
+        crc_target.extend_from_slice(&data);
+
+        let calculated_crc = CRC_INSTANCE.checksum(&crc_target);
+
+        if crc != calculated_crc {
+            return Err("The provided CRC does not match the expected one".into());
+        }
+
+        Ok(Self {
+            length,
+            chunk_type,
+            data,
+            crc,
+        })
+    }
+}
+
+impl Display for Chunk {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "Chunk Type = {}. Data = {}. Length = {}. CRC = {}",
+            self.chunk_type.to_string(),
+            self.data_as_string()
+                .expect("Data cannot be converted to String"),
+            self.length,
+            self.crc
+        )
+    }
+}
+
+impl Chunk {
+    fn new(chunk_type: ChunkType, data: Vec<u8>) -> Chunk {
+        let mut crc_target = chunk_type.bytes().to_vec();
+        crc_target.extend_from_slice(&data);
+
+        let crc = CRC_INSTANCE.checksum(&crc_target);
+
+        Chunk {
+            length: data.len(),
+            chunk_type,
+            data,
+            crc,
+        }
+    }
+
+    fn crc(&self) -> u32 {
+        self.crc
+    }
+
+    fn length(&self) -> usize {
+        self.length
+    }
+
+    fn chunk_type(&self) -> &ChunkType {
+        &self.chunk_type
+    }
+
+    fn data_as_string(&self) -> Result<&str, str::Utf8Error> {
+        str::from_utf8(&self.data)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
