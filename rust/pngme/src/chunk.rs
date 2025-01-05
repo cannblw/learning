@@ -29,6 +29,9 @@ impl TryFrom<&[u8]> for Chunk {
 
         let chunk_type: ChunkType = ChunkType::try_from(*chunk_type_bytes)?;
 
+        //// TODO: ERROR HERE:
+        /// WE SHOULD USE THE PROVIDED LENGTH PARAMETER TO CALCULATE THE INDEX OF THE CRC
+        ///
         // 4 because that's the size of the CRC in bytes
         let crc_index = input.len() - 4;
 
@@ -105,7 +108,10 @@ impl Chunk {
     }
 
     pub fn as_bytes(&self) -> Vec<u8> {
-        let mut bytes: Vec<u8> = self.length.to_be_bytes().to_vec();
+        // Convert to u32 as the spec defines the length to be the first 4 bytes
+        let length_u32 = self.length as u32;
+
+        let mut bytes: Vec<u8> = length_u32.to_be_bytes().to_vec();
 
         bytes.extend_from_slice(&self.chunk_type.bytes());
         bytes.extend_from_slice(&self.data);

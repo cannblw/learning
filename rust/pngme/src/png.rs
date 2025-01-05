@@ -18,6 +18,8 @@ impl TryFrom<&[u8]> for Png {
 
         let mut chunks: Vec<Chunk> = Vec::new();
 
+        //// TODO: ERROR HERE
+        /// WE CAN'T ASSUME THAT THE CHUNKS ARE 8 BYTES LONG
         for chunk in content.chunks(8) {
             let parsed_chunk = Chunk::try_from(chunk);
             match parsed_chunk {
