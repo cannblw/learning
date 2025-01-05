@@ -1,6 +1,6 @@
-use crate::chunk_type::ChunkType;
+use crate::{chunk_type::ChunkType, Error};
 use crc::Crc;
-use std::{error::Error, fmt::Display, str};
+use std::{fmt::Display, str};
 
 const CRC_INSTANCE: crc::Crc<u32> = Crc::<u32>::new(&crc::CRC_32_ISO_HDLC);
 
@@ -12,7 +12,7 @@ pub struct Chunk {
 }
 
 impl TryFrom<&Vec<u8>> for Chunk {
-    type Error = Box<dyn Error>;
+    type Error = Error;
 
     fn try_from(input: &Vec<u8>) -> Result<Self, Self::Error> {
         // First 4 bytes

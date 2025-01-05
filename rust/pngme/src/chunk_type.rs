@@ -1,8 +1,9 @@
 use std::{
-    error::Error,
     fmt::Display,
     str::{from_utf8, FromStr},
 };
+
+use crate::Error;
 
 fn are_bytes_lowercase_chars(bytes: [u8; 4]) -> bool {
     bytes
@@ -16,9 +17,9 @@ pub struct ChunkType {
 }
 
 impl TryFrom<[u8; 4]> for ChunkType {
-    type Error = Box<dyn Error>;
+    type Error = Error;
 
-    fn try_from(bytes: [u8; 4]) -> Result<Self, Box<dyn Error>> {
+    fn try_from(bytes: [u8; 4]) -> Result<Self, Error> {
         if !are_bytes_lowercase_chars(bytes) {
             return Err("Bytes must be uppercase or lowercase letters".into());
         }
@@ -28,9 +29,9 @@ impl TryFrom<[u8; 4]> for ChunkType {
 }
 
 impl FromStr for ChunkType {
-    type Err = Box<dyn Error>;
+    type Err = Error;
 
-    fn from_str(str: &str) -> Result<Self, Box<dyn Error>> {
+    fn from_str(str: &str) -> Result<Self, Error> {
         let chunk_bytes: [u8; 4] = str
             .as_bytes()
             .try_into()
