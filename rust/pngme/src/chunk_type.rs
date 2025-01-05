@@ -23,20 +23,20 @@ impl TryFrom<[u8; 4]> for ChunkType {
             return Err("Bytes must be uppercase or lowercase letters".into());
         }
 
-        Ok(ChunkType { bytes })
+        Ok(Self { bytes })
     }
 }
 
 impl FromStr for ChunkType {
     type Err = Box<dyn Error>;
 
-    fn from_str(str: &str) -> Result<ChunkType, Box<dyn Error>> {
+    fn from_str(str: &str) -> Result<Self, Box<dyn Error>> {
         let chunk_bytes: [u8; 4] = str
             .as_bytes()
             .try_into()
             .map_err(|_| "String must have a 4-byte length")?;
 
-        let chunk_type = ChunkType { bytes: chunk_bytes };
+        let chunk_type = Self { bytes: chunk_bytes };
 
         if !are_bytes_lowercase_chars(chunk_bytes) {
             return Err("Bytes must be uppercase or lowercase letters".into());

@@ -4,7 +4,7 @@ use std::{error::Error, fmt::Display, str};
 
 const CRC_INSTANCE: crc::Crc<u32> = Crc::<u32>::new(&crc::CRC_32_ISO_HDLC);
 
-struct Chunk {
+pub struct Chunk {
     chunk_type: ChunkType,
     data: Vec<u8>,
     length: usize,
@@ -74,13 +74,13 @@ impl Display for Chunk {
 }
 
 impl Chunk {
-    fn new(chunk_type: ChunkType, data: Vec<u8>) -> Chunk {
+    pub fn new(chunk_type: ChunkType, data: Vec<u8>) -> Self {
         let mut crc_target = chunk_type.bytes().to_vec();
         crc_target.extend_from_slice(&data);
 
         let crc = CRC_INSTANCE.checksum(&crc_target);
 
-        Chunk {
+        Self {
             length: data.len(),
             chunk_type,
             data,
