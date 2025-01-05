@@ -5,16 +5,16 @@ use std::{fmt::Display, str};
 const CRC_INSTANCE: crc::Crc<u32> = Crc::<u32>::new(&crc::CRC_32_ISO_HDLC);
 
 pub struct Chunk {
+    length: usize,
     chunk_type: ChunkType,
     data: Vec<u8>,
-    length: usize,
     crc: u32,
 }
 
-impl TryFrom<&Vec<u8>> for Chunk {
+impl TryFrom<&[u8]> for Chunk {
     type Error = Error;
 
-    fn try_from(input: &Vec<u8>) -> Result<Self, Self::Error> {
+    fn try_from(input: &[u8]) -> Result<Self, Self::Error> {
         // First 4 bytes
         let length_bytes: &[u8; 4] = &input[0..4]
             .try_into()
@@ -102,6 +102,16 @@ impl Chunk {
 
     fn data_as_string(&self) -> Result<&str, str::Utf8Error> {
         str::from_utf8(&self.data)
+    }
+
+    pub fn as_bytes(&self) -> Vec<u8> {
+        let mut bytes: Vec<u8> = self.length.to_be_bytes().to_vec();
+
+        bytes.extend_from_slice(&self.chunk_type.bytes());
+        bytes.extend_from_slice(&self.data);
+        bytes.extend_from_slice(&self.crc.to_be_bytes());
+
+        bytes
     }
 }
 
