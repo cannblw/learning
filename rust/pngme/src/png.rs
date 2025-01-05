@@ -24,7 +24,7 @@ impl TryFrom<&[u8]> for Png {
                 Ok(c) => {
                     chunks.push(c);
                 }
-                Err(error) => panic!("Chunk cannot be parsed: {error:?}"),
+                Err(error) => return Err(error),
             };
         }
 
