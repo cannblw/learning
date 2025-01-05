@@ -5,10 +5,10 @@ use std::{
 
 use crate::Error;
 
-fn are_bytes_lowercase_chars(bytes: [u8; 4]) -> bool {
+fn are_bytes_uppercase_lowercase_chars(bytes: [u8; 4]) -> bool {
     bytes
         .iter()
-        .all(|&b| (b >= 65 && b <= 90) || (b >= 97 && b <= 122))
+        .all(|&b| b.is_ascii_uppercase() || b.is_ascii_lowercase())
 }
 
 #[derive(PartialEq, Debug)]
@@ -20,7 +20,8 @@ impl TryFrom<[u8; 4]> for ChunkType {
     type Error = Error;
 
     fn try_from(bytes: [u8; 4]) -> Result<Self, Error> {
-        if !are_bytes_lowercase_chars(bytes) {
+        if !are_bytes_uppercase_lowercase_chars(bytes) {
+            println!("{:?}", bytes);
             return Err("Bytes must be uppercase or lowercase letters".into());
         }
 
@@ -39,7 +40,7 @@ impl FromStr for ChunkType {
 
         let chunk_type = Self { bytes: chunk_bytes };
 
-        if !are_bytes_lowercase_chars(chunk_bytes) {
+        if !are_bytes_uppercase_lowercase_chars(chunk_bytes) {
             return Err("Bytes must be uppercase or lowercase letters".into());
         }
 
@@ -101,7 +102,7 @@ impl ChunkType {
             return false;
         }
 
-        are_bytes_lowercase_chars(self.bytes)
+        are_bytes_uppercase_lowercase_chars(self.bytes)
     }
 }
 
