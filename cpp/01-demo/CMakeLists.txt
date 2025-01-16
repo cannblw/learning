@@ -5,6 +5,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_compile_options(-Wall -Wextra -pedantic-errors)
+add_compile_options(-Wall -Wpedantic -Wextra -Werror -pedantic-errors)
 
 add_executable(main main.cpp)
